@@ -1,5 +1,6 @@
 #'---
-#' title: "RNA seq workflow Part 1 - Counts to .dds"
+#' title: "RNA seq workflow part 1 - Counts to .dds"
+#' subtitle: "HIOs dual seq experiment 2"
 #' author: "Ryan Berger"
 #' date: "2018-08-06"
 #' output: 
@@ -36,12 +37,6 @@
 #------------------------------------------------------------
 #' # Begin script
 
-#+ set_cache_dir, include=F
-# Set a directory for all cache files to go
-dir.create(here('results/DESeq2_human/src_html_output/knitr_cache'))
-opts_chunk$set(cache.path = here('results/DESeq2_human/src_html_output/knitr_cache/'))
-
-
 #' ## Libraries
 library(DESeq2)
 library(dplyr)
@@ -59,6 +54,11 @@ library(tximport)
 # biocLite("DESeq2")
 # biocLite("EnsDb.Hsapiens.v75")
 
+
+#+ set_cache_dir, include=F
+# Set a directory for all cache files to go
+dir.create(here('results/DESeq2_human/src_html_output/knitr_cache'))
+opts_chunk$set(cache.path = here('results/DESeq2_human/src_html_output/knitr_cache/'))
 
 #' ## Set up directories
 #' We'll use the `here` package to control our working directory. This will set the root directory to `'../HIO_dualseq2/'`.
@@ -101,8 +101,10 @@ tx2gene <- Tx[,c('tx_id','gene_name')]
 sample_key <- read.csv(here('data/sample_key.csv'))
 
 
-## Optional: filter out samples from the key that you don't wan to analyze
-# sample_key <- filter(sample_key, hr == 8) # Only include 8h samples
+#' This RNA seq run contains 12 samples that were from a different experiment (the first dual-seq experiment). The column `dualseq_expt` indicates which experiment each sample is from so we'll use this to filter these samples out of our analysis.
+
+# Optional: filter out samples from the key that you don't want to analyze
+sample_key <- dplyr::filter(sample_key, dualseq_expt == 2) 
 
 # Vector of samples used in the tximport
 txiSamples <- as.vector(unique(sample_key$code_name))
@@ -118,6 +120,7 @@ names(files) <- sample_key$Description
 
 #+ tximport, cache=T
 txi <- tximport(files, type = "kallisto", tx2gene = tx2gene)
+
 
 # export abundance counts
 write.csv(txi$abundance, file = file.path(results.dir, "complete_dataset_txi.csv"))
@@ -141,7 +144,7 @@ nrow(dds)
 dds <- dds[rowSums(counts(dds)) > 1, ]
 nrow(dds) 
 
-#' This removed ~2000 genes from the dataset.
+#' This removed ~3000 genes from the dataset.
 
 # Account for transcript length
 dds <- DESeq2::estimateSizeFactors(dds)
