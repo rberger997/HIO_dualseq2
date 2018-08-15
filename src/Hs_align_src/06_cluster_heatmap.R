@@ -2,7 +2,7 @@
 #' title: "RNA seq workflow part 6 - Cluster heatmap"
 #' subtitle: "HIOs dual seq experiment 2"
 #' author: "Ryan Berger"
-#' date: "2018-08-07"
+#' date: "2018-08-13"
 #' output: 
 #'   html_document:
 #'      theme: flatly
@@ -36,9 +36,9 @@ library(rmarkdown)
 #------------------------------------------------------------
 
 #' ## Load and prep data
-#' For this heatmap we want to see the top n variance genes across all samples. We also want the four replicates for each condition to be a single box and so we'll calculate the averages. There is a choice of which to do first: define the top variance genes or calculate the averages by sample. We'll calculate averages first and then use that result to pick the top variance genes to minimize single replicates that are outliers.
+#' For this heatmap we want to see the top n variance genes across all samples. We also want each condition to be a single box and so we'll calculate the averages of the four replicates. There is a choice of which to do first: define the top variance genes or calculate the averages by sample. We'll calculate averages first and then use that result to pick the top variance genes to minimize single replicates that are outliers.
 #' 
-#' We'll iterate over all the columns in the counts matrix to calculate averages. Since they're all in order (every four columns is a single sample), we can use the `apply` and `mean` functions across each four columns.
+#' We'll iterate over all the columns in the counts matrix to calculate averages. Since they're all in order (every four columns is a single sample), we'll set a column index, use the `apply` and `mean` functions across each group of four columns, and `cbind` everything together into a new matrix.
 
 # Load data
 rld <- readRDS(here('results/DESeq2_human/rld_all.rds'))
@@ -62,10 +62,10 @@ for(i in 1:12){
   label <- gsub(pattern = '-([0-9])$','',colnames(counts1)[hi])
   
   # Calculate average by sample
-  A <-  apply(counts1[,lo:hi], 1, mean)
+  temp <-  apply(counts1[,lo:hi], 1, mean)
   
   # Combine together
-  mat1 <- cbind(mat1, A)
+  mat1 <- cbind(mat1, temp)
   colnames(mat1)[i] <- label
 }
 head(mat1)
@@ -130,7 +130,8 @@ p
 #+ save
 #' ## Save as png
 # Save png of heatmap
-png(here('img/heatmap.png'), width = 5, height = 7, units = 'in', res = 300)
+png(here('img/topvar_heatmap.png'), 
+    width = 5, height = 7, units = 'in', res = 300)
 p
 dev.off()
 
