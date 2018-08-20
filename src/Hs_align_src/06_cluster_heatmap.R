@@ -33,6 +33,12 @@ library(pheatmap)
 library(RColorBrewer)
 library(rmarkdown)
 
+
+# Create directories for images of split samples to go into
+dir.create(here('img/stm_mutants'), recursive = T)
+dir.create(here('img/serovars'), recursive = T)
+
+
 #------------------------------------------------------------
 
 #' ## Load and prep data
@@ -77,31 +83,27 @@ head(mat1)
 
 
 
-# number of genes in heatmap. (e.g. top n variance genes)
-n <- 25
+# Make function for making the heatmap
+make_heatmap <- function(input, n, cutrows){
 
-# Define top variance genes, extract from full data
-topVarGenes <- head(order(rowVars(mat1), decreasing = TRUE), n) 
-mat <- mat1[topVarGenes, ]
+  # Define top variance genes, extract from full data
+topVarGenes <- head(order(rowVars(input), decreasing = TRUE), n) 
+mat <- input[topVarGenes, ]
 
 # convert to fold over mean of all samples
 mat <- mat - rowMeans(mat)  
 
-
-
 # Get sample times to use as annotation
-anno1 <- as.data.frame(gsub('.*_','',colnames(mat1))) %>% 
+anno1 <- as.data.frame(gsub('.*_','',colnames(input))) %>% 
   set_colnames('Time') %>% 
-  set_rownames(colnames(mat1))
+  set_rownames(colnames(input))
 
 labels <- gsub('_.*$','',rownames(anno1))
 
-
-#+ figure, fig.height = 8, fig.width = 6
 # Make heatmap
 p <- pheatmap(mat,
          main = paste('Top',n,'variance genes'),
-         cutree_rows = 3,
+         cutree_rows = cutrows,
          cutree_cols = 3,
          treeheight_row = 25,
          treeheight_col = 25,
@@ -113,6 +115,11 @@ p <- pheatmap(mat,
          cellwidth = 15,
          cellheight = 15)
 
+p
+}
+
+#+ figure, fig.height = 8, fig.width = 6
+p <- make_heatmap(input = mat1, n = 25, cutrows = 3)
 p
 
 
@@ -148,6 +155,62 @@ d3heatmap(mat,
 
 
 
+
+#' # Split samples
+#' The paper will be split into sections and so we'll split the heatmap into two groups of samples:
+#' 
+#' * STM mutants (STM, SPI-1, SPI-2)
+#' * Serovars (STM, SE, ST)
+#' 
+#' Each heatmap will contain the top 25 variance genes for that set of samples.
+
+#+ 
+#' ## STM mutants heatmap
+
+colnames(mat1)
+
+
+#+ fig.height = 8, fig.width = 6
+# Filter samples
+mat2 <- mat1[,c(1:4,9:12)]
+
+p1 <- make_heatmap(input = mat2, 
+                   n=25, 
+                   cutrows = 2)
+
+p1
+
+# Save png of heatmap
+png(here('img/stm_mutants/mut_topvar_heatmap.png'), 
+    width = 5, height = 7, units = 'in', res = 300)
+p1
+dev.off()
+
+
+
+#' ## Serovars heatmap
+
+colnames(mat1)
+
+#+ fig.height = 8, fig.width = 6
+# Filter samples
+mat3 <- mat1[,c(1:8)]
+
+p2 <- make_heatmap(input = mat3, 
+                   n=25, 
+                   cutrows = 2)
+
+p2
+
+# Save png of heatmap
+png(here('img/serovars/ser_topvar_heatmap.png'), 
+    width = 5, height = 7, units = 'in', res = 300)
+p2
+dev.off()
+
+
+
+
 #+ render, include=F
 # Render source file to html 
 # dir.create(here('results/DESeq2_human/src_html_output'))
@@ -156,6 +219,9 @@ d3heatmap(mat,
 
 # render(here('src/Hs_align_src/06_cluster_heatmap.R'), output_dir = render.dir, intermediates_dir = render.dir, clean = TRUE)
 
+
+# Copy to dropbox
+# source(here('src/Hs_align_src/XX_copy_to_dropbox.R'))
 
 
 

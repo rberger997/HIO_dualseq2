@@ -111,7 +111,7 @@ for(i in seq(files)){
   temp <- prep_df(temp, label = label, time = time)
   
   data1 <- rbind(data1, temp)
-  print(paste(file, 'done'))
+  print(paste(i, 'of', length(files), 'done:', files[i]))
   }
 
 
@@ -173,7 +173,8 @@ data2 <- dplyr::anti_join(data1, lncrna)
 #+ fig2, fig.height = 7, fig.width = 10, fig.align = 'center'
 # Make plot - facet time into rows, samples into columns
 
-p <- ggplot(data = data2, aes(x=log2FoldChange, y=-log10(padj), 
+volcano_plot <- function(input){
+ggplot(data = input, aes(x=log2FoldChange, y=-log10(padj), 
                               color=colors, label=symbol))+
   geom_point(size=.85)+
   geom_vline(xintercept = 0, linetype = 'dotted')+
@@ -195,9 +196,10 @@ p <- ggplot(data = data2, aes(x=log2FoldChange, y=-log10(padj),
         strip.text.y = element_text(size = 14, face = 'bold'))+
   facet_grid(rows = vars(time), cols = vars(label))+
   xlim(-12,12)
+}
 
+p <- volcano_plot(data2)
 p
-
 
 
 #' ## Save png of plot
@@ -211,6 +213,42 @@ dev.off()
 write.csv(data2, file = here('results/DESeq2_human/volcano_data.csv'))
 
 
+
+#' # Split samples
+#' The paper will be split into sections and so we'll split the plots into two groups of samples:
+#' 
+#' * STM mutants (STM, SPI-1, SPI-2)
+#' * Serovars (STM, SE, ST)
+
+#+
+#' ## STM mutants volcano plot
+
+mut <- dplyr::filter(data2, label %in% c('STM','SPI1','SPI2')) %>% 
+  volcano_plot()
+mut
+
+
+#' ## Serovars volcano plot
+ser <- dplyr::filter(data2, label %in% c('STM','SE','ST')) %>% 
+  volcano_plot()
+ser
+
+
+#' ## Save as png
+#+ eval=F
+png(filename = here("/img/stm_mutants/mut_volcano_facet.png"),
+    width = 9, height = 6, units = 'in', res = 300)
+print(mut)
+dev.off()
+
+
+png(filename = here("/img/serovars/ser_volcano_facet.png"),
+    width = 9, height = 6, units = 'in', res = 300)
+print(ser)
+dev.off()
+
+
+
 #+ render, include=F
 # Render source file to html 
 # dir.create(here('results/DESeq2_human/src_html_output'))
@@ -218,3 +256,7 @@ write.csv(data2, file = here('results/DESeq2_human/volcano_data.csv'))
 # render.dir <- here('results/DESeq2_human/src_html_output/')
 
 # render(here('src/Hs_align_src/04_volcano_plot.R'), output_dir = render.dir, intermediates_dir = render.dir, clean = TRUE)
+
+
+# Copy to dropbox
+# source(here('src/Hs_align_src/XX_copy_to_dropbox.R'))

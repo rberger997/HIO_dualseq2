@@ -1,7 +1,7 @@
 #'---
-#' title: "RNA seq workflow part 7 - GSEA hallmark gene sets"
+#' title: "RNA seq workflow part 8 - GSEA REACTOME gene sets"
 #' subtitle: "HIOs dual seq experiment 2"
-#' author: "Ryan Berger & David Hill"
+#' author: "Ryan Berger"
 #' date: "2018-08-15"
 #' output: 
 #'   html_document:
@@ -17,7 +17,7 @@
 
 
 #' # Purpose
-#' The purpose of this script is to generate a heatmap of normalized enrichment scores of the 50 "hallmark pathways" in the MSigDB gene collection. According to description on the [molecular signature database site](http://software.broadinstitute.org/gsea/msigdb/collections.jsp), "Hallmark gene sets are coherently expressed signatures derived by aggregating many MSigDB gene sets to represent well-defined biological states or processes." We'll use these to get a sense of the overall global pathway changes occurring in our RNA seq samples compared to a PBS control.
+#' The purpose of this script is to generate a heatmap of normalized enrichment scores
 #' 
 #' The input needed are the differential expression files ('SE_2h_over_PBS_2h_diffexpress.csv') and the hallmark gene set [file](http://software.broadinstitute.org/gsea/msigdb/download_file.jsp?filePath=/resources/msigdb/6.2/h.all.v6.2.entrez.gmt) (h.all.v6.2.entrez.gmt).
 #' 
@@ -45,7 +45,7 @@ library(stringi)
 
 
 # Directory for output (in results folder)
-dir.create(path =  here("results/DESeq2_human/GSEA/hallmark/"), 
+dir.create(path =  here("results/DESeq2_human/GSEA/reactome/"), 
            recursive = TRUE)
 
 
@@ -55,106 +55,112 @@ opts_chunk$set(cache.path = here('results/DESeq2_human/src_html_output/knitr_cac
 
 #-----------------------------------------------------------------------------
 
-#' ## Run GSEA using hallmark gene sets
+#' ## Run GSEA using REACTOME gene sets
 #' This analysis is based on running gene set enrichment using differential expression files as input. These are the steps:
 #' 
 #' * Load differential expression file.
 #' * Create vector of descending log2FoldChange values named by gene symbols.
-#' * Run GSEA using the vector and hallmark gene file.
+#' * Run GSEA using the vector and `gsePathway` function.
 #' * Save results as .csv file.
-#' * Combine all results to single dataframe
+#' * Combine all results to single dataframe.
 #' 
 #' We'll write a loop to iterate these steps over each differential expression file and combine results together.
 
 
-# load hallmark gene set
-hall <- read.gmt(gmtfile = here("data/h.all.v6.2.symbols.gmt"))
 
 # Define list of diff expression files to run   
 files <- list.files(here('results/DESeq2_human/diff_expression/'))
 files
 
 
-#+ loop, cache=T, warning=F
+#+ loop_reactome, cache=T, warning=F
 # Create empty object to put full data into
 full.data <- NULL
 
 
-# Iterate over all files - run hallmark GSEA, save output
+# Iterate over all files - run reactome GSEA, save output
 for(i in seq(files)){
   
   # Sample being analyzed
   sample <-  gsub('_diffexpress.csv','',files[i])
-
-  # Load diff expression file, sort by descending fold change
- input <- read.csv(file = here('results/DESeq2_human/diff_expression',files[i])) %>%
-      arrange(-log2FoldChange)
   
-# Create vector of descending list of gene changes, named by symbol
-   up.list <- input$log2FoldChange
-   names(up.list) <- input$symbol
+  # Load diff expression file, sort by descending fold change
+  input <- read.csv(file = here('results/DESeq2_human/diff_expression',
+                                files[i])) %>%
+    arrange(-log2FoldChange)
+  
+  # Create vector of descending list of gene changes, named by symbol
+  up.list <- input$log2FoldChange
+  names(up.list) <- input$entrez
   
   # REACTOME GSEA
-  gmt.gsea <- GSEA(geneList  = up.list,
-                   nPerm        = 1000,
-                   minGSSize    = 10,
-                   pvalueCutoff = 1,
-                   verbose      = F,
-                   TERM2GENE    = hall)
-
+  gmt.gsea <- gsePathway(geneList     = up.list,
+                         nPerm        = 1000,
+                         minGSSize    = 10,
+                         pvalueCutoff = 1,
+                         verbose      = TRUE)
+  
   # Convert to dataframe, add columns with sample labels
   temp <- as.data.frame(gmt.gsea) %>% 
-    mutate(pathway = gsub('_',' ',.$ID),
-           sample = sample, 
+    mutate(sample = sample, 
            label = gsub('_.*','',files[i]), 
            time = stri_extract_first_regex(files[i], '[0-9]h')) 
   
-  # Remove 'HALLMARK' from pathway column
-  temp$pathway <- gsub('HALLMARK ', '', temp$pathway)
-    
+  
   # Save results
-  out.dir <- here('results/DESeq2_human/GSEA/hallmark/')
+  out.dir <- here('results/DESeq2_human/GSEA/reactome/')
   write.csv(temp, 
-            file = paste0(out.dir,'GSEA_hallmark_',sample,'.csv'))
+            file = paste0(out.dir,'GSEA_reactome_',sample,'.csv'),
+            row.names = F)
   
   # Combine into full dataframe
   full.data <- rbind(full.data, temp)
   
   # Monitor progress
   print(paste(i, 'of', length(files),'done:',files[i] ))
-  }
-  
+}
+
 
 # Save the full data
-write.csv(full.data, here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all.csv'))
+write.csv(full.data, here('results/DESeq2_human/GSEA/reactome/GSEA_reactome_all.csv'), row.names = F)
 
 
-#' ## Make heatmap of GSEA hallmark sets
-#' Now that we have all the GSEA normalized enrichment scores for all samples in a single dataframe, we can make a heatmap to visualize changes in pathways. We'll use `ggplot` to make a heatmap (using `geom_tile()`) of the normalized enrichment scores (NES) and split the 2h and 8h samples apart vertically. The pathways will be in descending order with the most enriched pathways at the top and the least enriched at the bottom.
+#' ## Make heatmap of GSEA REACTOME 
+
+# Get samples for heatmap - top 50 pathways by average significance
+x <- group_by(full.data, Description) %>% 
+  summarise(avg.adjp = mean(p.adjust)) %>% 
+  #arrange(-avg.NES) %>% 
+  arrange(avg.adjp) %>% 
+  head(., 50)
 
 
 # Set sample order for heatmap
 full.data$label <- factor(full.data$label, 
                           levels = c('SE','ST','STM','SPI1','SPI2'))
 
+
+data2 <- filter(full.data, Description %in% x$Description)
+
+
+
 # Set order for heatmap - pathways by descending average NES
-NES.avg <- group_by(full.data, pathway) %>% 
+NES.avg <- group_by(data2, Description) %>% 
   summarise(NES_avg = mean(NES)) %>% 
   arrange(NES_avg)
 
-full.data$pathway <- factor(full.data$pathway, levels = NES.avg$pathway)
+data2$Description <- factor(data2$Description, levels = NES.avg$Description)
 
 
 # Round NES (remove decimals for ggplotly tooltip)
-full.data$NES <- round(full.data$NES, 2)
+data2$NES <- round(data2$NES, 2)
 
 # Set up palette of colors for heatmap
 hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
 
 #+ figure, fig.height = 8.5, fig.width = 7
 # Heatmap
-hallmark_plot <- function(input){
-  ggplot(input, aes(label, pathway)) + 
+p <- ggplot(data2, aes(label, Description)) + 
   geom_tile(aes(fill = NES), colour = "white") + 
   scale_fill_gradientn(colors = hm.palette(100))+ 
   theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
@@ -164,13 +170,13 @@ hallmark_plot <- function(input){
         axis.text = element_text(size = 10),
         legend.text = element_text(size = 12),
         legend.title = element_text(size = 12, face = 'bold'))+
-  ggtitle('GSEA hallmark gene set enrichment')+
-  labs(x='', y = 'Pathway')+
+  ggtitle('REACTOME gene set enrichment')+
+  labs(x='', y = 'Pathway',
+       subtitle = 'Top 50 pathways by avg. adjusted p')+
   facet_grid(cols = vars(time), scales = 'free')
-}
-
-p <- hallmark_plot(full.data)
 p
+
+
 
 #' ## Interactive heatmap
 #+ interactive, fig.height = 8.5, fig.width = 7
@@ -185,47 +191,6 @@ p
 dev.off()
 
 
-#' # Split samples
-#' The paper will be split into sections and so we'll split the heatmap into two groups of samples:
-#' 
-#' * STM mutants (STM, SPI-1, SPI-2)
-#' * Serovars (STM, SE, ST)
-
-#+
-#' ## STM mutants GSEA hallmark
-
-# Select samples for heatmap
-muts <- filter(full.data, label %in% c('STM', 'SPI1', 'SPI2'))
-
-#+ fig.height = 8.5, fig.width = 7
-# Heatmap
-p1 <- hallmark_plot(muts)
-p1
-
-
-#' ## Serovars GSEA hallmark
-
-#+ fig.height = 8.5, fig.width = 7
-# Select samples
-ser <- filter(full.data, label %in% c('STM','SE','ST'))
-
-p2 <- hallmark_plot(ser)
-p2
-
-
-#' ## Save png of plots
-#+ eval=F
-png(filename = here("/img/stm_mutants/mut_GSEA_hallmark_heatmap.png"),
-    width =6.5, height = 8.5, units = 'in', res = 300)
-p1
-dev.off()
-
-png(filename = here("/img/serovars/ser_GSEA_hallmark_heatmap.png"),
-    width =6.5, height = 8.5, units = 'in', res = 300)
-p2
-dev.off()
-
-
 
 #+ render, include=F
 # Render source file to html 
@@ -235,5 +200,10 @@ dev.off()
 
 # render(here('src/Hs_align_src/07_gsea_hallmark.R'), output_dir = render.dir, intermediates_dir = render.dir, clean = TRUE)
 
-# Copy to dropbox
-# source(here('src/Hs_align_src/XX_copy_to_dropbox.R'))
+
+# Run Reactome GSEA
+STM_PBS.reactome.gsea <- gsePathway(geneList     = up_list,
+                                    nPerm        = 1000,
+                                    minGSSize    = 10,
+                                    pvalueCutoff = 1,
+                                    verbose      = TRUE)
