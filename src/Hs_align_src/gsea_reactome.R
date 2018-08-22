@@ -124,6 +124,9 @@ for(i in seq(files)){
 # Save the full data
 write.csv(full.data, here('results/DESeq2_human/GSEA/reactome/GSEA_reactome_all.csv'), row.names = F)
 
+# Load the full data
+# full.data <- read.csv(here('results/DESeq2_human/GSEA/reactome/GSEA_reactome_all.csv'))
+
 
 #' ## Make heatmap of GSEA REACTOME 
 
@@ -160,7 +163,9 @@ hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
 
 #+ figure, fig.height = 8.5, fig.width = 7
 # Heatmap
-p <- ggplot(data2, aes(label, Description)) + 
+
+react_heatmap <- function(input){
+ggplot(input, aes(label, Description)) + 
   geom_tile(aes(fill = NES), colour = "white") + 
   scale_fill_gradientn(colors = hm.palette(100))+ 
   theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
@@ -174,9 +179,10 @@ p <- ggplot(data2, aes(label, Description)) +
   labs(x='', y = 'Pathway',
        subtitle = 'Top 50 pathways by avg. adjusted p')+
   facet_grid(cols = vars(time), scales = 'free')
+}
+
+p <- react_heatmap(data2)
 p
-
-
 
 #' ## Interactive heatmap
 #+ interactive, fig.height = 8.5, fig.width = 7
@@ -191,6 +197,46 @@ p
 dev.off()
 
 
+
+#' # Split samples
+#' 
+
+split_samples <- function(df, samples){
+mut <- dplyr::filter(df, label %in% samples)
+  
+
+subset <- dplyr::group_by(mut, Description) %>% 
+  dplyr::mutate(avg_adjp = mean(p.adjust))
+
+
+# Get samples for heatmap - top 50 pathways by average significance
+x <- group_by(mut, Description) %>% 
+  summarise(avg.adjp = mean(p.adjust)) %>% 
+  arrange(avg.adjp) %>% 
+  head(., 50)
+
+mut <- dplyr::filter(mut, Description %in% x$Description)
+
+
+
+# Set order for heatmap - pathways by descending average NES
+NES.avg <- group_by(mut, Description) %>% 
+  summarise(NES_avg = mean(NES)) %>% 
+  arrange(NES_avg)
+
+mut$Description <- factor(mut$Description, levels = NES.avg$Description)
+
+return(mut)
+}
+
+# STM mutants heatmap
+split_samples(df = full.data, samples = c('STM','SPI1','SPI2')) %>% 
+  react_heatmap()
+
+
+# Serovars heatmap
+split_samples(df = full.data, samples = c('STM','SE','ST')) %>% 
+  react_heatmap()
 
 #+ render, include=F
 # Render source file to html 
