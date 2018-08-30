@@ -126,7 +126,9 @@ for(i in seq(files)){
   
 
 # Save the full data
-write.csv(full.data, here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all.csv'))
+write.csv(full.data, 
+          here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all.csv'),
+          row.names = F)
 
 
 #' ## Make heatmap of GSEA hallmark sets
@@ -225,7 +227,9 @@ png(filename = here("/img/serovars/ser_GSEA_hallmark_heatmap.png"),
 p2
 dev.off()
 
-
+# Save ggplot objects for the plots
+saveRDS(p1, file = here('img/ggplot_objects/gg_mut_hallmarkGSEA.rds'))
+saveRDS(p2, file = here('img/ggplot_objects/gg_ser_hallmarkGSEA.rds'))
 
 #+ render, include=F
 # Render source file to html 

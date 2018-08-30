@@ -27,8 +27,14 @@
 library(ggplot2)
 library(here)
 library(knitr)
+library(magrittr)
 library(rmarkdown)
 library(stringi)
+
+
+# Create directory to save ggplot objects
+dir.create(here('img/ggplot_objects'), recursive = T)
+
 
 #+ set_cache_dir, include=F
 # Set a directory for all cache files to go
@@ -246,6 +252,66 @@ png(filename = here("/img/serovars/ser_volcano_facet.png"),
     width = 9, height = 6, units = 'in', res = 300)
 print(ser)
 dev.off()
+
+# Save ggplot objects
+saveRDS(mut, file = here('img/ggplot_objects/gg_mut_volcano.rds'))
+saveRDS(ser, file = here('img/ggplot_objects/gg_ser_volcano.rds'))
+
+
+#-----------------------------------------------------------------
+
+#' # Alternative plot 
+#' Make a volcano plot using David's script. This version uses geom_point and jitter to visualize gene expression changes.
+
+
+library(RColorBrewer)
+source(here('src/Hs_align_src/ggplot2-themes.R'))
+
+
+# Load data
+data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'))
+
+
+
+# make a new status column that will indicate statistical significance
+data2$status <- 'a'
+data2[which(data2$log2FoldChange > 1 & data2$padj < 0.05), 'status'] <- 'b'
+data2[which(data2$log2FoldChange < -1 & data2$padj < 0.05), 'status'] <- 'c'
+
+# set order so that blue and red are plotted on top of grey
+data2 <- data2[order(data2$status),]
+
+
+# Only select Serovars samples
+data2 <- filter(data2, label %in% c('SE','STM','ST'))
+
+
+
+# Build plot
+ggplot(data = data2,
+       aes(x = log2FoldChange, y = label)) +
+  geom_point(position = position_jitter(h = 0.4),
+             aes(fill = status, color = status),
+             shape = 21, size = 0.5)+
+  facet_grid(rows = vars(time))+
+  scale_fill_manual(values = c("grey70", color.set[1], color.set[2])) +
+  scale_color_manual(values = c("grey70", color.set[1], color.set[2])) +
+  xlim(c(-6, 6)) +
+  ylab("") +
+  xlab(expression(paste("log"[2],"FC (HIO + bacteria / HIO + PBS)"))) +
+  theme(axis.text = element_text(size = 18),
+        axis.text.y = element_text(size = 24,
+                                   face = 'italic'),
+        legend.position = "none",
+        panel.background = element_blank(),
+        panel.border = element_rect(color = "grey30",
+                                    fill = NA),
+        axis.title = element_text(size = 24),
+        strip.text = element_text(size = 24),
+        strip.text.y = element_text(size = 24,
+                                    face = "italic",
+                                    angle = 0))
+
 
 
 
