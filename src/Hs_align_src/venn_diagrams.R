@@ -1,128 +1,109 @@
+
 # Making venn diagrams with the eulerr package
 
 # Should make area proportional venn diagrams from lists or a matrix
 
 
-
+#' ## Libraries and directories
+library(dplyr)
 library(eulerr)
-eulerr_options(pointsize = 16)
+library(here)
+library(magrittr)
+library(tidyr)
+
+
+# Load data from volcano plots
+data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'), 
+                  stringsAsFactors = F)
+head(data2)
+
+
+
+# Function to make venn diagrams
+make_venn <- function(df,x1,x2,x3,color,t){
+
+  # want to compare all genes increasing
+incr <- filter(df, colors == color & time == t) %>% 
+  select(c(symbol,label)) %>% 
+  arrange(label)
+
+
+# Split into three groups by sample
+a <- filter(incr, label == x1) %>% 
+  .$symbol
+b <- filter(incr, label == x2) %>% 
+  .$symbol
+c <- filter(incr, label == x3) %>% 
+  .$symbol
+  
+# Calculate number of shared genes in each group
+ABC <- length(c[c%in%a[a%in%b]])
+AB <- length(a[a%in%b]) - ABC
+AC <- length(a[a%in%c]) - ABC
+A <- length(a) - AB -AC - ABC
+BC <- length(b[b%in%c]) - ABC
+BA <- length(b[b%in%a]) - ABC
+B <- length(b)-BA-BC-ABC
+C <- length(c)-AC-BC-ABC
+
+
+
+eulerr_options(pointsize = 14)
 options(digits = 4)
 # Input in the form of a named numeric vector
-fit1 <- euler(c("A" = 25, "B" = 5, "C" = 5,
-                "A&B" = 5, "A&C" = 5, "B&C" = 3,
-                "A&B&C" = 3))
-# Input as a matrix of logicals
-set.seed(1)
-mat <- cbind(
-  A = sample(c(TRUE, TRUE, FALSE), 50, TRUE),
-  B = sample(c(TRUE, FALSE), 50, TRUE),
-  C = sample(c(TRUE, FALSE, FALSE, FALSE), 50, TRUE)
-)
-fit2 <- euler(mat)
+fit1 <- euler(c("A" = A, "B" = B, "C" = C,
+                "A&B" = AB, "A&C" = AC, "B&C" = BC,
+                "A&B&C" = ABC))
 
-plot(fit2, 
-     quantities = T,
-     fill = c('red','gray','blue'),
-     lty = 1:3)
-     #labels = c('test','A','None'))
+test <- plot(fit1, 
+             quantities = T,
+             fill = c("lightblue", "lightcoral", "lemonchiffon"),
+             lty = 1,
+             labels = c(x1,x2,x3))
+return(test)
+}
+
+
+# STM mutants venn diagrams
+m2i <- make_venn(data2, 'STM','SPI1','SPI2','Increasing','2h')
+m8i <- make_venn(data2, 'STM','SPI1','SPI2','Increasing','8h')
+
+m2d <- make_venn(data2, 'STM','SPI1','SPI2','Decreasing','2h')
+m8d <- make_venn(data2, 'STM','SPI1','SPI2','Decreasing','8h')
+
+
+# Serovars venn diagrams
+s2i <- make_venn(data2, 'STM','SE','ST','Increasing','2h')
+s8i <- make_venn(data2, 'STM','SE','ST','Increasing','8h')
+
+s2d <- make_venn(data2, 'STM','SE','ST','Decreasing','2h')
+s8d <- make_venn(data2, 'STM','SE','ST','Decreasing','8h')
+
+
+# Save venn diagram objects
+saveRDS(m2i, file = here(paste0('img/ggplot_objects/gg_mut_venn_2h_incr.rds')))
+saveRDS(m8i, file = here(paste0('img/ggplot_objects/gg_mut_venn_8h_incr.rds')))
+saveRDS(m2d, file = here(paste0('img/ggplot_objects/gg_mut_venn_2h_decr.rds')))
+saveRDS(m8d, file = here(paste0('img/ggplot_objects/gg_mut_venn_8h_decr.rds')))
+
+
+saveRDS(s2i, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h_incr.rds')))
+saveRDS(s8i, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h_incr.rds')))
+saveRDS(s2d, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h_decr.rds')))
+saveRDS(s8d, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h_decr.rds')))
+
+
+
+
+
 eulerr::eulerr_options()
 
 
-library(here)
-# Load data from volcano plots
-data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'), 
-                  stringsAsFactors = F)
-head(data2)
-
-
-# want to compare all genes increasing
-incr <- filter(data2, colors == 'Increasing' & time == '2h') %>% 
-  select(c(symbol,label))
-library(tidyr)
-
-se <- filter(incr, label == 'SE')
-stm <- filter(incr, label == 'STM')
-st <- filter(incr, label == 'ST')
-
-
-a <- se$symbol
-b <- stm$symbol
-c <- st$symbol
 
 
 
-  
-x <- cbind(se$symbol, stm$symbol, st$symbol)
-colnames(x) <- c('SE', 'STM', 'ST')
-head(x)
-tail(x)
-dim(x)
-
-fit3 <- euler(c(se$symbol, stm$symbol))
-
-
-
-a
-
-library(VennDiagram)
-z <- calculate.overlap(list(a,b,c))
-
-v <- euler(c(A=450, B=1800, "A&B"=425)) ;plot(v)
-
-
-
-
-# New venn diagram maker from http://matticklab.com/index.php?title=Weighted_Venn_diagrams_in_R
-
-source("https://bioconductor.org/biocLite.R"); biocLite(c("RBGL","graph"))
-
-library(devtools)
-install_github("js229/Vennerable"); library(Vennerable)
-
-w <- Venn(Sets = list(a,b,c), 
-          SetNames = c('SE','STM','ST'))
-plot(w,
-     doWeights = T)
-
-?Venn
-vignette('Venn')
-?VennThemes
-
-
-
-library(here)
-# Load data from volcano plots
-data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'), 
-                  stringsAsFactors = F)
-head(data2)
-
-
-# want to compare all genes increasing
-incr <- filter(data2, colors == 'Increasing' & time == '2h') %>% 
-  select(c(symbol,label))
-library(tidyr)
-
-a <- filter(incr, label == 'SE')
-b <- filter(incr, label == 'STM')
-c <- filter(incr, label == 'ST')
-
-
-w <- Venn(Sets = list(a$symbol,b$symbol,c$symbol), 
-          SetNames = c('SE','STM','ST')) 
-plot(w,
-     doWeights = T,
-     doEuler = T,
-     show = list(Faces = F, DarkMatter = F))
-
-
-
-
-
-library(VennDiagram)
-#pdf("venn_diagram.pdf")
-venn.plot <- venn.diagram(list(a$symbol, b$symbol, c$symbol), NULL, fill=c("red", "green", 'blue'), alpha=c(0.5,0.5,0.5), cex = 2, cat.fontface=4, category.names=c("Condition A", "Condition B", 'C'))
-grid.draw(venn.plot)
-dev.off()  
-
-
-
+# Save as png
+png(filename = here(paste0('img/venn_serovars_',i,'.png')),
+    width =5, height = 5, units = 'in', res = 300)
+  print(make_venn(data2, 'SE','STM','ST','Increasing',i))
+dev.off()
