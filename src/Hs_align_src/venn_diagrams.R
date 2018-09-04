@@ -20,10 +20,10 @@ head(data2)
 
 
 # Function to make venn diagrams
-make_venn <- function(df,x1,x2,x3,color,t){
+make_venn <- function(df,x1,x2,x3,t){
 
-  # want to compare all genes increasing
-incr <- filter(df, colors == color & time == t) %>% 
+  # want to compare all significant genes
+incr <- filter(df, colors != 'Non significant' & time == t) %>% 
   select(c(symbol,label)) %>% 
   arrange(label)
 
@@ -65,32 +65,24 @@ return(test)
 
 
 # STM mutants venn diagrams
-m2i <- make_venn(data2, 'STM','SPI1','SPI2','Increasing','2h')
-m8i <- make_venn(data2, 'STM','SPI1','SPI2','Increasing','8h')
-
-m2d <- make_venn(data2, 'STM','SPI1','SPI2','Decreasing','2h')
-m8d <- make_venn(data2, 'STM','SPI1','SPI2','Decreasing','8h')
+m2 <- make_venn(data2, 'STM','SPI1','SPI2','2h')
+m8 <- make_venn(data2, 'STM','SPI1','SPI2','8h')
 
 
 # Serovars venn diagrams
-s2i <- make_venn(data2, 'STM','SE','ST','Increasing','2h')
-s8i <- make_venn(data2, 'STM','SE','ST','Increasing','8h')
+s2 <- make_venn(data2, 'STM','SE','ST','2h')
+s8 <- make_venn(data2, 'STM','SE','ST','8h')
 
-s2d <- make_venn(data2, 'STM','SE','ST','Decreasing','2h')
-s8d <- make_venn(data2, 'STM','SE','ST','Decreasing','8h')
 
 
 # Save venn diagram objects
-saveRDS(m2i, file = here(paste0('img/ggplot_objects/gg_mut_venn_2h_incr.rds')))
-saveRDS(m8i, file = here(paste0('img/ggplot_objects/gg_mut_venn_8h_incr.rds')))
-saveRDS(m2d, file = here(paste0('img/ggplot_objects/gg_mut_venn_2h_decr.rds')))
-saveRDS(m8d, file = here(paste0('img/ggplot_objects/gg_mut_venn_8h_decr.rds')))
+saveRDS(m2, file = here(paste0('img/ggplot_objects/gg_mut_venn_2h.rds')))
+saveRDS(m8, file = here(paste0('img/ggplot_objects/gg_mut_venn_8h.rds')))
+
+saveRDS(s2, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h.rds')))
+saveRDS(s8, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h.rds')))
 
 
-saveRDS(s2i, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h_incr.rds')))
-saveRDS(s8i, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h_incr.rds')))
-saveRDS(s2d, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h_decr.rds')))
-saveRDS(s8d, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h_decr.rds')))
 
 
 
