@@ -65,7 +65,7 @@ samps <- unique(colData(dds)$code_name)[3:12] %>%
   as.character()
 
 
-#' This could be done one at a time but it's more efficient to set up a loop and iterate over all the samples. We'll make sure each is matched to the proper PBS control with a logical test at the start of the loop that checks the time point of each sample.
+#' We'll set up a loop to calculate differential expression and iterate over all the samples. We'll make sure each is matched to the proper PBS control with a logical test at the start of the loop that checks the time point of each sample.
 
 #+ loop, cache=T
 # Set up loop to calculate differential expression for all samples over PBS
