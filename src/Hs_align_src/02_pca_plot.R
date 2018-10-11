@@ -117,7 +117,7 @@ ggplot(data = input, aes(x = PC1, y = PC2))+
     plot.title = element_text(size = 30))
 }
 
-plot <- pca_plot(pca.df)
+p <- pca_plot(pca.df)
 
 #' ## Observations
 #' Looking at the PCA plot, it appears the main sources of variance are the time point of collection and the presence/absence of bacteria injected. This seems to separate samples into an interesting pattern of three clusters:
@@ -139,7 +139,7 @@ plot <- pca_plot(pca.df)
 #+ save, eval=F
 png(filename = here("/img/pca.png"),
     width = 900, height = 500)
-print(plot)
+print(p)
 dev.off()
 
 
@@ -226,6 +226,10 @@ pca.df <- plotPCA(rld, intgroup = c('code_name', 'Inject', 'hr'), returnData = T
 # Make plot
 pca_plot <- function(input){
   ggplot(data = input, aes(x = PC1, y = PC2))+ 
+    geom_hline(yintercept = 0,
+               size = .5, linetype = "dashed", color = "grey70") +
+    geom_vline(xintercept = 0,
+               size = .5, linetype = "dashed", color = "grey70") +
     geom_point(shape = 21, stroke = 1.5, 
                aes(fill = as.factor(Inject),
                    color = as.factor(hr)), 
@@ -236,25 +240,23 @@ pca_plot <- function(input){
     #scale_color_brewer(palette = "Set2", name = 'Time', direction = 1) +    
     scale_color_manual(values=c("gray", "black"), name = 'Time (hr)')+
     theme(legend.position = "right") +
-    geom_hline(yintercept = 0,
-               size = 1, linetype = "dashed", color = "grey70") +
-    geom_vline(xintercept = 0,
-               size = 1, linetype = "dashed", color = "grey70") +
     coord_fixed(ratio = 1) +
     xlab(pca$labels$x) + #pull variance estimates from al. plotPCA call
     ylab(pca$labels$y) +
     # Move y axis
-    theme(axis.title.y = element_text(margin = margin(t = 0, r = 1, 
+    theme(axis.title.y = element_text(margin = margin(t = 0, r = 0, 
                                                       b = 0, l = 0))) +
     # Move x axis
-    theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, 
+    theme(axis.title.x = element_text(margin = margin(t = 0, r = 0, 
                                                       b = 0, l = 0)))+
     # Shrink axis labels down
     theme(plot.caption = element_text(vjust = 1), 
-          axis.title = element_text(size = 24), 
-          axis.text.x = element_text(size = 18), 
-          axis.text.y = element_text(size = 18), 
-          plot.title = element_text(size = 30))
+          axis.title = element_text(size = 16), 
+          axis.text.x = element_text(size = 14), 
+          axis.text.y = element_text(size = 14), 
+          plot.title = element_text(size = 20),
+          legend.title=element_text(size=16), 
+          legend.text=element_text(size=14))
   
 
 }
@@ -264,7 +266,7 @@ return(plot)
 
 mut.plot <- pcaplot2(rld_mut)
 ser.plot <- pcaplot2(rld_ser)
-
+mut.plot
 
 # save png of plot
 #+ eval=F

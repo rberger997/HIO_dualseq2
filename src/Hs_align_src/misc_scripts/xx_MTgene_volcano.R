@@ -2,9 +2,12 @@
 
 #' Run the 04_volcano_plot.R script first to get the data2 object and libraries loaded.
 
+
+data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'))
+
 library(dplyr)
 library(ggplot2)
-
+head(data2)
 
 mtgenes <- c('MT-ATP6','MT-ATP8','MT-CO1','MT-CO2','MT-CO3','MT-CYB','MT-ND1','MT-ND2','MT-ND3','MT-ND4','MT-ND4L','MT-ND5','MT-ND6')
 
@@ -45,3 +48,41 @@ png(filename = here("/img/MTgenes_volcano.png"),
     width = 900, height = 600)
 print(p)
 dev.off()
+
+
+
+
+
+
+
+
+library(RColorBrewer)
+# Set up palette of colors for heatmap
+hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
+
+data4 <- filter(data3, label %in% c('SE','STM','ST'))
+data4$label <- factor(data4$label, levels = c('STM','SE','ST'))
+
+
+# Heatmap of MT genes 
+p1 <- ggplot(data = data4, aes(x = label, y = symbol))+
+  geom_tile(aes(fill = log2FoldChange), colour = "white")+
+  scale_fill_gradientn(colors = hm.palette(11), limits = c(-1.65,1.65))+
+  facet_grid(cols = vars(time))+
+  ylab('')+
+  xlab('') + 
+  theme(plot.subtitle = element_text(vjust = 1), 
+    plot.caption = element_text(vjust = 1), 
+    axis.text = element_text(size = 12, face = "bold"), 
+    strip.text.x = element_text(size = 12, face = 'bold'),
+    legend.text = element_text(size = 12, 
+        face = "bold"), legend.title = element_text(size = 12, 
+        face = "bold"))
+
+#' ## Save png of plot
+#+ save, eval=F
+png(filename = here("/img/MTgenes_heatmap.png"),
+    width = 6, height = 5, units = 'in', res = 300)
+print(p1)
+dev.off()
+

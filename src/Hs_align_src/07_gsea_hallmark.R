@@ -135,9 +135,38 @@ write.csv(full.data,
 #' Now that we have all the GSEA normalized enrichment scores for all samples in a single dataframe, we can make a heatmap to visualize changes in pathways. We'll use `ggplot` to make a heatmap (using `geom_tile()`) of the normalized enrichment scores (NES) and split the 2h and 8h samples apart vertically. The pathways will be in descending order with the most enriched pathways at the top and the least enriched at the bottom.
 
 
+
+
+
+## Add categories for HALLMARK pathways
+# Load hallmark annotation categories
+cats <- read.csv(here('data/hallmark_geneset_categories.csv')) %>% 
+  select(Hallmark_name, Process_category) %>% 
+  rename(pathway = Hallmark_name)
+
+# remove underscores to match other format
+cats$pathway <- gsub(pattern = '_', replacement = ' ', 
+                     x = cats$pathway)
+
+# Check that all labels match
+table(cats$pathway %in% full.data$pathway)
+
+
+# Add categories to full data
+full.data <- left_join(full.data, cats, by = 'pathway')
+
+# Fix Oxygen typo
+full.data$pathway <- gsub('OXIGEN', 'OXYGEN', full.data$pathway)
+
+# Remove "PATHWAY" from reactive oxygen species label
+full.data$pathway <- gsub('PATHWAY', '', full.data$pathway)
+
+
+
+
 # Set sample order for heatmap
 full.data$label <- factor(full.data$label, 
-                          levels = c('SE','ST','STM','SPI1','SPI2'))
+                          levels = c('STM','SE','ST','SPI1','SPI2'))
 
 # Set order for heatmap - pathways by descending average NES
 NES.avg <- group_by(full.data, pathway) %>% 
@@ -146,12 +175,23 @@ NES.avg <- group_by(full.data, pathway) %>%
 
 full.data$pathway <- factor(full.data$pathway, levels = NES.avg$pathway)
 
+str(full.data)
+unique(full.data$Process_category)
+# Set order of categories
+full.data$Process_category <- factor(full.data$Process_category,
+                                     levels = c('Immune response', 'Signaling', 
+                                                'Metabolism', 'Cellular stress',
+                                                'Proliferation', 'DNA damage',
+                                                'Development', 'Cellular component'))
+
 
 # Round NES (remove decimals for ggplotly tooltip)
 full.data$NES <- round(full.data$NES, 2)
 
 # Set up palette of colors for heatmap
 hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
+
+
 
 #+ figure, fig.height = 8.5, fig.width = 7
 # Heatmap
@@ -160,19 +200,21 @@ hallmark_plot <- function(input){
   geom_tile(aes(fill = NES), colour = "white") + 
   scale_fill_gradientn(colors = hm.palette(100))+ 
   theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
-        strip.text.x = element_text(size = 12, face = 'bold'),
-        strip.text.y = element_text(size = 12, face = 'bold'),
-        axis.title = element_text(size = 14, face = "bold"), 
-        axis.text = element_text(size = 10),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12, face = 'bold'))+
+        strip.text.x = element_text(size = 10, face = 'bold'),
+        strip.text.y = element_text(size = 10, face = 'bold'),
+        axis.title = element_text(size = 12, face = "bold"), 
+        axis.text = element_text(size = 8),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10, face = 'bold'))+
   ggtitle('GSEA hallmark gene set enrichment')+
-  labs(x='', y = 'Pathway')+
-  facet_grid(cols = vars(time), scales = 'free')
+  labs(x='', y = '')+
+    facet_grid(rows = vars(Process_category), cols = vars(time),
+               scale = 'free', space = 'free', labeller = label_wrap_gen(width=10))
 }
 
 p <- hallmark_plot(full.data)
 p
+
 
 #' ## Interactive heatmap
 #+ interactive, fig.height = 8.5, fig.width = 7
@@ -223,7 +265,7 @@ p1
 dev.off()
 
 png(filename = here("/img/serovars/ser_GSEA_hallmark_heatmap.png"),
-    width =6.5, height = 8.5, units = 'in', res = 300)
+    width =6.5, height = 10, units = 'in', res = 300)
 p2
 dev.off()
 

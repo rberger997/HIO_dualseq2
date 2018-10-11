@@ -17,13 +17,16 @@ data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'),
                   stringsAsFactors = F)
 head(data2)
 
-
+head(data2)
 
 # Function to make venn diagrams
-make_venn <- function(df,x1,x2,x3,t){
+make_venn <- function(df,x1,x2,x3,t, padj = 1, l2fc = 0){
 
+  # Set significance filter
+  df$signif <- ifelse(df$padj < padj & abs(df$log2FoldChange) > l2fc, 'Significant', 'Non significant')
+  
   # want to compare all significant genes
-incr <- filter(df, colors != 'Non significant' & time == t) %>% 
+incr <- filter(df, signif == 'Significant' & time == t) %>% 
   select(c(symbol,label)) %>% 
   arrange(label)
 
@@ -65,13 +68,12 @@ return(test)
 
 
 # STM mutants venn diagrams
-m2 <- make_venn(data2, 'STM','SPI1','SPI2','2h')
-m8 <- make_venn(data2, 'STM','SPI1','SPI2','8h')
-
+m2 <- make_venn(data2, 'STM','SPI1','SPI2','2h', padj = 0.05, l2fc = 1)
+m8 <- make_venn(data2, 'STM','SPI1','SPI2','8h', padj = 0.05, l2fc = 1)
 
 # Serovars venn diagrams
-s2 <- make_venn(data2, 'STM','SE','ST','2h')
-s8 <- make_venn(data2, 'STM','SE','ST','8h')
+s2 <- make_venn(data2, 'STM','SE','ST','2h', padj = 0.05, l2fc = 1)
+s8 <- make_venn(data2, 'STM','SE','ST','8h', padj = 0.05, l2fc = 1)
 
 
 
@@ -84,18 +86,4 @@ saveRDS(s8, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h.rds')))
 
 
 
-
-
-
-
-eulerr::eulerr_options()
-
-
-
-
-
-# Save as png
-png(filename = here(paste0('img/venn_serovars_',i,'.png')),
-    width =5, height = 5, units = 'in', res = 300)
-  print(make_venn(data2, 'SE','STM','ST','Increasing',i))
-dev.off()
+?euler

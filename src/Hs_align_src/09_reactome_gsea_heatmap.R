@@ -12,13 +12,13 @@ library(magrittr)
 
 pathway_heatmap <- function(d1, d2, d3, 
                             label1, label2, label3, 
-                            n){
+                            n, rows = T, p = 1, cutrows = 1){
   
 # Get list of pathways - Must be significant in at least one sample
 paths <- NULL
 
 for(i in list(d1, d2, d3)){
-  a <- filter(i, pvalue < 0.05) %>% 
+  a <- filter(i, pvalue <= p) %>% 
     select(Description)
   
   print(paste(nrow(a), 'significant pathways'))
@@ -27,7 +27,7 @@ for(i in list(d1, d2, d3)){
     unique()
 }
 
-print(paste(nrow(paths), 'pathways significant in at least one sample'))
+print(paste(nrow(paths), 'pathways significant in at least one sample with p value cutoff at', p))
 
 # Get NES for each pathway from each sample
 paths1 <- paths
@@ -59,7 +59,11 @@ mat <- x[topVarGenes, ]
 # convert to fold over mean of all samples
 #mat <- mat - rowMeans(mat)  
 
-pheatmap(mat)
+pheatmap(mat,
+         show_rownames = rows,
+         breaks = seq(-2.6, 2.7, by = .055),
+         cluster_cols = F,
+         cutree_rows = cutrows)
          #fontsize = 10,
          #cellwidth = 20,
          #cellheight = 10
@@ -97,55 +101,119 @@ se_8h <- read.csv(file.path(gsea.dir, 'GSEA_reactome_SE_8h_over_PBS_8h.csv'), st
 st_8h <- read.csv(file.path(gsea.dir, 'GSEA_reactome_ST_8h_over_PBS_8h.csv'), stringsAsFactors = F)
 
 
-# Mutant heatmaps
-mut2h <- pathway_heatmap(stm_2h, spi1_2h, spi2_2h,
-                'STM', 'SPI1','SPI2', n = 50)
 
+
+
+# Make zoomed out heatmaps without labels
+
+# Mutant heatmaps
+# Original heatmap used 50 for mut2h p<0.05
+mut2h <- pathway_heatmap(stm_2h, spi1_2h, spi2_2h,
+                         'STM', 'SPI1','SPI2', 
+                         n = 1357, rows = F, p = 1, cutrows = 2)
+
+# original heatmap used 30 for mut8h p<0.05
 mut8h <- pathway_heatmap(stm_8h, spi1_8h, spi2_8h,
-                'STM', 'SPI1','SPI2', n = 30)
+                         'STM', 'SPI1','SPI2', 
+                         n = 1357, rows = F, p = 1, cutrows = 2)
 
 
 
 # serovars heatmaps
+# original heatmap used 80 for ser2h p<0.05
 ser2h <- pathway_heatmap(stm_2h, se_2h, st_2h,
-                'STM', 'SE','ST', n = 80)
+                         'STM', 'SE','ST', n = 1357, rows = F, p = 1)
 
-
+# original heatmap used 100 for ser8h p<0.05
 ser8h <- pathway_heatmap(stm_8h, se_8h, st_8h,
-                'STM', 'SE','ST', n = 100)
+                         'STM', 'SE','ST', n = 1357, rows = F, p = 1)
 
+
+# Save heatmaps
+width = 3
+height = 6.5
+res = 500
 
 # Save mutants as png
 png(filename = here('img/stm_mutants/mut_2h_gsea_diff_heatmap.png'),
-    width = 8, height = 10, units = 'in', res = 300)
+    width = width, height = height, units = 'in', res = res)
 mut2h
 dev.off()
 
 
 png(filename = here('img/stm_mutants/mut_8h_gsea_diff_heatmap.png'),
-    width = 8, height = 10, units = 'in', res = 300)
+    width = width, height = height, units = 'in', res = res)
 mut8h
 dev.off()
 
 
 # Save serovars as png
 png(filename = here('img/serovars/ser_2h_gsea_diff_heatmap.png'),
-    width = 10, height = 10, units = 'in', res = 300)
+    width = width, height = height, units = 'in', res = res)
 ser2h
 dev.off()
 
 
 png(filename = here('img/serovars/ser_8h_gsea_diff_heatmap.png'),
-    width = 10, height = 14, units = 'in', res = 300)
+    width = width, height = height, units = 'in', res = res)
 ser8h
 dev.off()
 
 
 
-# met <- filter(stm_2h, Description == 'Metallothioneins bind metals') %>% 
-#   select(core_enrichment)
-# 
-#   
-# met1 <- strsplit(met$core_enrichment, split = '/') %>% 
-#   .[[1]] %>% 
-#   as.numeric()
+
+# Make detailed heatmaps with labels (huge images) for zoom closeup
+
+# Mutant heatmaps
+# Original heatmap used 50 for mut2h p<0.05
+mut2h <- pathway_heatmap(stm_2h, spi1_2h, spi2_2h,
+                         'STM', 'SPI1','SPI2', n = 1357, rows = T, p = 1)
+
+# original heatmap used 30 for mut8h p<0.05
+mut8h <- pathway_heatmap(stm_8h, spi1_8h, spi2_8h,
+                         'STM', 'SPI1','SPI2', n = 1357, rows = T, p = 1)
+
+
+
+# serovars heatmaps
+# original heatmap used 80 for ser2h p<0.05
+ser2h <- pathway_heatmap(stm_2h, se_2h, st_2h,
+                         'STM', 'SE','ST', n = 1357, rows = T, p = 1)
+
+# original heatmap used 100 for ser8h p<0.05
+ser8h <- pathway_heatmap(stm_8h, se_8h, st_8h,
+                         'STM', 'SE','ST', n = 1357, rows = T, p = 1)
+
+
+
+# Save heatmaps
+
+# Save mutants as png
+png(filename = here('img/stm_mutants/mut_2h_gsea_diff_heatmap_detailed.png'),
+    width = 11, height = 185, units = 'in', res = 200)
+mut2h
+dev.off()
+
+
+png(filename = here('img/stm_mutants/mut_8h_gsea_diff_heatmap_detailed.png'),
+    width = 11, height = 185, units = 'in', res = 200)
+mut8h
+dev.off()
+
+
+# Save serovars as png
+png(filename = here('img/serovars/ser_2h_gsea_diff_heatmap_detailed.png'),
+    width = 11, height = 185, units = 'in', res = 200)
+ser2h
+dev.off()
+
+
+png(filename = here('img/serovars/ser_8h_gsea_diff_heatmap_detailed.png'),
+    width = 11, height = 185, units = 'in', res = 200)
+ser8h
+dev.off()
+
+
+
+
+

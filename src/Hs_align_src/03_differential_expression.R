@@ -113,6 +113,68 @@ file.name <- paste0(here('results/DESeq2_human/diff_expression/'),
 write.csv(res.df, file = file.name, row.names = F)
 }
 
+
+
+#' ## Differential expression over STM
+
+#' Want to compare the mutants and serovars to STM so we'll calculate differential expression over STM directly and save those files in a separate folder.
+
+
+# Samples to compare to STM
+samps <- samps[3:10]
+
+
+# Create directory for diff expression files over STM
+dir.create(here('results/DESeq2_human/diff_expression_stm'))
+
+#+ loop1, cache=T
+# Set up loop to calculate differential expression for all samples over PBS
+for(i in seq(samps)){
+  
+  # Sample for i in loop
+  sample <- samps[i]
+  
+  # Check which time point the i sample is to match PBS control
+  if(grepl('2h',sample, fixed = T) == T){
+    STM <- 'STM_2h'}
+  else{
+    STM <- 'STM_8h'
+  }
+  
+  # Calculate differential expression - sample over PBS
+  res <- results(dds, 
+                 contrast = c('code_name', sample, STM))
+  
+  
+  # Add annotation - symbol and entrezID
+  res$symbol <- rownames(res)
+  # Add column for gene Entrez ID
+  res$entrez <- mapIds(org.Hs.eg.db,
+                       keys = rownames(res),
+                       column = 'ENTREZID',
+                       keytype = 'SYMBOL',
+                       multiVals = 'first')
+  # Add column for gene name
+  res$name <- mapIds(org.Hs.eg.db,
+                     keys = rownames(res),
+                     column = 'GENENAME',
+                     keytype = 'SYMBOL',
+                     multiVals = 'first')
+  # Make results dataframe
+  
+  
+  res.df <- as.data.frame(res) %>% 
+    arrange(padj)
+  
+  
+  # Save output file
+  file.name <- paste0(here('results/DESeq2_human/diff_expression_stm/'),
+                      sample,'_over_',STM,'_diffexpress.csv')
+  write.csv(res.df, file = file.name, row.names = F)
+}
+
+
+
 #' ## Ending notes
 #' The differential expression outputs are now in the results directory. These will be used to make MA and volcano plots.
 
