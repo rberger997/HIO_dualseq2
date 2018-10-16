@@ -110,12 +110,12 @@ st_8h <- read.csv(file.path(gsea.dir, 'GSEA_reactome_ST_8h_over_PBS_8h.csv'), st
 # Original heatmap used 50 for mut2h p<0.05
 mut2h <- pathway_heatmap(stm_2h, spi1_2h, spi2_2h,
                          'STM', 'SPI1','SPI2', 
-                         n = 1357, rows = F, p = 1, cutrows = 2)
+                         n = 1357, rows = F, p = 1, cutrows = 1)
 
 # original heatmap used 30 for mut8h p<0.05
 mut8h <- pathway_heatmap(stm_8h, spi1_8h, spi2_8h,
                          'STM', 'SPI1','SPI2', 
-                         n = 1357, rows = F, p = 1, cutrows = 2)
+                         n = 1357, rows = F, p = 1, cutrows = 1)
 
 
 
@@ -131,7 +131,7 @@ ser8h <- pathway_heatmap(stm_8h, se_8h, st_8h,
 
 # Save heatmaps
 width = 3
-height = 6.5
+height = 6
 res = 500
 
 # Save mutants as png

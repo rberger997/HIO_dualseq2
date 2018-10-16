@@ -31,6 +31,7 @@
 #+ load_pkgs, error=T, message=F, warning=F
 library(clusterProfiler)
 library(dplyr)
+library(DOSE)
 library(ggplot2)
 library(GSEABase)
 library(here)
@@ -99,6 +100,9 @@ for(i in seq(files)){
                          minGSSize    = 10,
                          pvalueCutoff = 1,
                          verbose      = TRUE)
+  
+  # Make core enrichment readable (gene symbols, not entrez)
+  gmt.gsea <- setReadable(gmt.gsea, 'org.Hs.eg.db')
   
   # Convert to dataframe, add columns with sample labels
   temp <- as.data.frame(gmt.gsea) %>% 

@@ -130,6 +130,9 @@ write.csv(full.data,
           here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all.csv'),
           row.names = F)
 
+# Load the full data
+full.data <- read.csv(here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all.csv'))
+
 
 #' ## Make heatmap of GSEA hallmark sets
 #' Now that we have all the GSEA normalized enrichment scores for all samples in a single dataframe, we can make a heatmap to visualize changes in pathways. We'll use `ggplot` to make a heatmap (using `geom_tile()`) of the normalized enrichment scores (NES) and split the 2h and 8h samples apart vertically. The pathways will be in descending order with the most enriched pathways at the top and the least enriched at the bottom.
@@ -265,7 +268,7 @@ p1
 dev.off()
 
 png(filename = here("/img/serovars/ser_GSEA_hallmark_heatmap.png"),
-    width =6.5, height = 10, units = 'in', res = 300)
+    width =6.5, height = 8.5, units = 'in', res = 300)
 p2
 dev.off()
 

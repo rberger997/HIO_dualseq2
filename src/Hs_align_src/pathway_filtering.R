@@ -148,7 +148,6 @@ path_heatmap(ser_paths8)
 
 # STM Mutants
 # 2h mutants
-
 mut2h <- pathway_filter(stm_2h, spi1_2h, spi2_2h, p = 0.05,
                         label1 = 'STM_2h', 'SPI1_2h', 'SPI2_2h')
 
