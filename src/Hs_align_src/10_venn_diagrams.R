@@ -17,10 +17,8 @@ data2 <- read.csv(here('results/DESeq2_human/volcano_data.csv'),
                   stringsAsFactors = F)
 head(data2)
 
-head(data2)
-
 # Function to make venn diagrams
-make_venn <- function(df,x1,x2,x3,t, padj = 1, l2fc = 0){
+make_venn <- function(df,x1,x2,x3,t, padj = 1, l2fc = 0, show_labels = T){
 
   # Set significance filter
   df$signif <- ifelse(df$padj < padj & abs(df$log2FoldChange) > l2fc, 'Significant', 'Non significant')
@@ -50,31 +48,42 @@ B <- length(b)-BA-BC-ABC
 C <- length(c)-AC-BC-ABC
 
 
-
+# Formatting options
 eulerr_options(pointsize = 14)
 options(digits = 4)
+
+
 # Input in the form of a named numeric vector
 fit1 <- euler(c("A" = A, "B" = B, "C" = C,
                 "A&B" = AB, "A&C" = AC, "B&C" = BC,
                 "A&B&C" = ABC))
 
-test <- plot(fit1, 
+diagram <- plot(fit1, 
              quantities = T,
              fill = c("lightblue", "lightcoral", "lemonchiffon"),
              lty = 1,
-             labels = c(x1,x2,x3))
-return(test)
+             labels = if(show_labels == F){
+               F
+             }else{
+               c(x1,x2,x3)})
+return(diagram)
 }
 
 
-# STM mutants venn diagrams
-m2 <- make_venn(data2, 'STM','SPI1','SPI2','2h', padj = 0.05, l2fc = 1)
-m8 <- make_venn(data2, 'STM','SPI1','SPI2','8h', padj = 0.05, l2fc = 1)
+# STM mutants venn diagrams 
+# (leave labels off for better formatting in powerpoint)
+m2 <- make_venn(data2, 'STM','SPI1','SPI2','2h', padj = 0.05, l2fc = 1,
+                show_labels = F)
+
+m8 <- make_venn(data2, 'STM','SPI1','SPI2','8h', padj = 0.05, l2fc = 1,
+                show_labels = F)
 
 # Serovars venn diagrams
-s2 <- make_venn(data2, 'STM','SE','ST','2h', padj = 0.05, l2fc = 1)
-s8 <- make_venn(data2, 'STM','SE','ST','8h', padj = 0.05, l2fc = 1)
-
+# (leave labels off for better formatting in powerpoint)
+s2 <- make_venn(data2, 'STM','SE','ST','2h', padj = 0.05, l2fc = 1,
+                show_labels = F)
+s8 <- make_venn(data2, 'STM','SE','ST','8h', padj = 0.05, l2fc = 1,
+                show_labels = F)
 
 
 # Save venn diagram objects
@@ -85,5 +94,3 @@ saveRDS(s2, file = here(paste0('img/ggplot_objects/gg_ser_venn_2h.rds')))
 saveRDS(s8, file = here(paste0('img/ggplot_objects/gg_ser_venn_8h.rds')))
 
 
-
-?euler

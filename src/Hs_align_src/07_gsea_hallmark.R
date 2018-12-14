@@ -147,6 +147,11 @@ cats <- read.csv(here('data/hallmark_geneset_categories.csv')) %>%
   select(Hallmark_name, Process_category) %>% 
   rename(pathway = Hallmark_name)
 
+cats$Process_category <- gsub('DNA damage', 'Cellular stress', 
+                              cats$Process_category) %>% 
+  gsub(pattern = 'Cellular component', 'Cell comp.', x = .) %>% 
+  gsub(pattern = 'Proliferation', 'Cell division', x = .)
+
 # remove underscores to match other format
 cats$pathway <- gsub(pattern = '_', replacement = ' ', 
                      x = cats$pathway)
@@ -184,8 +189,8 @@ unique(full.data$Process_category)
 full.data$Process_category <- factor(full.data$Process_category,
                                      levels = c('Immune response', 'Signaling', 
                                                 'Metabolism', 'Cellular stress',
-                                                'Proliferation', 'DNA damage',
-                                                'Development', 'Cellular component'))
+                                                'Cell division', 'DNA damage',
+                                                'Development', 'Cell comp.'))
 
 
 # Round NES (remove decimals for ggplotly tooltip)
