@@ -57,7 +57,7 @@ library(tximport)
 
 #+ set_cache_dir, include=F
 # Set a directory for all cache files to go
-dir.create(here('results/DESeq2_human/src_html_output/knitr_cache'))
+dir.create(here('results/DESeq2_human/src_html_output/knitr_cache'), recursive = T)
 opts_chunk$set(cache.path = here('results/DESeq2_human/src_html_output/knitr_cache/'))
 
 #' ## Set up directories

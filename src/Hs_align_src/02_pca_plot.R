@@ -43,6 +43,12 @@ opts_chunk$set(cache.path = here('results/DESeq2_human/src_html_output/knitr_cac
 
 results.dir <- here('results/DESeq2_human/')
 
+# Create new directories
+dir.create(here('img/'))
+dir.create(here('img/stm_mutants/'))
+dir.create(here('img/serovars/'))
+
+
 
 #' ## Load the data
 #' We previously saved the `dds` object in the results folder. Let's load it now:
@@ -281,6 +287,8 @@ print(ser.plot)
 dev.off()
 
 
+
+dir.create(here('img/ggplot_objects/'))
 saveRDS(mut.plot, file = here('img/ggplot_objects/gg_mut_pcaplot.rds'))
 saveRDS(ser.plot, file = here('img/ggplot_objects/gg_ser_pcaplot.rds'))
 

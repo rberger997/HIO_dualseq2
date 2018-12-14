@@ -108,9 +108,10 @@ res.df <- as.data.frame(res) %>%
 
 
 # Save output file
-file.name <- paste0(here('results/DESeq2_human/diff_expression/'),
+file.name <- paste0(here('results/DESeq2_human/diff_expression//'),
                     sample,'_over_',PBS,'_diffexpress.csv')
 write.csv(res.df, file = file.name, row.names = F)
+
 }
 
 
@@ -168,7 +169,7 @@ for(i in seq(samps)){
   
   
   # Save output file
-  file.name <- paste0(here('results/DESeq2_human/diff_expression_stm/'),
+  file.name <- paste0(here('results/DESeq2_human/diff_expression_stm//'),
                       sample,'_over_',STM,'_diffexpress.csv')
   write.csv(res.df, file = file.name, row.names = F)
 }
