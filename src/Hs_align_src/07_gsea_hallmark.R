@@ -40,6 +40,7 @@ library(org.Hs.eg.db)
 library(plotly)
 library(RColorBrewer)
 library(ReactomePA)
+library(readr)
 library(rmarkdown)
 library(stringi)
 
@@ -140,10 +141,9 @@ full.data <- read.csv(here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all
 
 
 
-
 ## Add categories for HALLMARK pathways
 # Load hallmark annotation categories
-cats <- read.csv(here('data/hallmark_geneset_categories.csv')) %>% 
+cats <- read_csv(here('data/hallmark_geneset_categories.csv')) %>% 
   select(Hallmark_name, Process_category) %>% 
   rename(pathway = Hallmark_name)
 

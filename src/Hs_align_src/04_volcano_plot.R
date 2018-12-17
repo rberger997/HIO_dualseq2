@@ -283,7 +283,7 @@ data2 <- data2[order(data2$status),]
 
 
 # Only select Serovars samples
-data2 <- filter(data2, label %in% c('SE','STM','ST'))
+data2 <- dplyr::filter(data2, label %in% c('SE','STM','ST'))
 
 
 

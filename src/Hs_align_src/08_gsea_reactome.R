@@ -112,7 +112,7 @@ for(i in seq(files)){
   
   
   # Save results
-  out.dir <- here('results/DESeq2_human/GSEA/reactome/')
+  out.dir <- here('results/DESeq2_human/GSEA/reactome//')
   write.csv(temp, 
             file = paste0(out.dir,'GSEA_reactome_',sample,'.csv'),
             row.names = F)
@@ -251,91 +251,94 @@ split_samples(df = full.data, samples = c('STM','SE','ST')) %>%
 # render(here('src/Hs_align_src/07_gsea_hallmark.R'), output_dir = render.dir, intermediates_dir = render.dir, clean = TRUE)
 
 
-# Run Reactome GSEA
-STM_PBS.reactome.gsea <- gsePathway(geneList     = up_list,
-                                    nPerm        = 1000,
-                                    minGSSize    = 10,
-                                    pvalueCutoff = 1,
-                                    verbose      = TRUE)
 
 
-
-
-
-# Heatmap for anna-lisa
-
-full.data <- read.csv(here('results/DESeq2_human/GSEA/reactome/GSEA_reactome_all.csv'))
-
-
-z <- full.data %>% 
-  filter(label %in% c('STM','ST'))
-
-
-# Get samples for heatmap - top 50 pathways by average significance
-n <- 20
-
-x <- group_by(z, Description) %>% 
-  summarise(avg.adjp = mean(p.adjust)) %>% 
-  #arrange(-avg.NES) %>% 
-  arrange(avg.adjp) %>% 
-  head(., 20)
-
-
-# Set sample order for heatmap
-full.data$label <- factor(full.data$label, 
-                          levels = c('SE','ST','STM','SPI1','SPI2'))
-
-
-data2 <- filter(z, Description %in% x$Description)
-
-# Remove long description from one that uses "or"
- data2$Description <- gsub(pattern = ' or .*','',data2$Description) %>% 
-   gsub(pattern = 'Interleukin', replacement = 'IL')
-
-
-# Set order for heatmap - pathways by descending average NES
-NES.avg <- group_by(data2, Description) %>% 
-  summarise(NES_avg = mean(NES)) %>% 
-  arrange(NES_avg)
-
-data2$Description <- factor(data2$Description, levels = NES.avg$Description)
-
-
-
-# Round NES (remove decimals for ggplotly tooltip)
-data2$NES <- round(data2$NES, 2)
-
-# Set up palette of colors for heatmap
-hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
-
-#+ figure, fig.height = 8.5, fig.width = 7
-# Heatmap
-
-react_heatmap <- function(input){
-  ggplot(input, aes(label, Description)) + 
-    geom_tile(aes(fill = NES), colour = "white") + 
-    scale_fill_gradientn(colors = hm.palette(100))+ 
-    theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
-          strip.text.x = element_text(size = 12, face = 'bold'),
-          strip.text.y = element_text(size = 12, face = 'bold'),
-          axis.title = element_text(size = 14, face = "bold"), 
-          axis.text = element_text(size = 10),
-          legend.text = element_text(size = 12),
-          legend.title = element_text(size = 12, face = 'bold'))+
-    ggtitle('REACTOME gene set enrichment')+
-    labs(x='', y = 'Pathway',
-         subtitle = paste('Top',n, 'pathways by avg. adjusted p'))+
-    facet_grid(cols = vars(time), scales = 'free')
-}
-
-p <- react_heatmap(data2)
-p
-
-
-#' ## Save png of plot
-#+ save, eval=F
-png(filename = here("/img/GSEA_reactome_heatmap_AL.png"),
-    width =7, height = 8.5, units = 'in', res = 500)
-p
-dev.off()
-
+#' # Extra stuff
+#' # Run Reactome GSEA
+#' STM_PBS.reactome.gsea <- gsePathway(geneList     = up_list,
+#'                                     nPerm        = 1000,
+#'                                     minGSSize    = 10,
+#'                                     pvalueCutoff = 1,
+#'                                     verbose      = TRUE)
+#' 
+#' 
+#' 
+#' 
+#' 
+#' # Heatmap for anna-lisa
+#' 
+#' full.data <- read.csv(here('results/DESeq2_human/GSEA/reactome/GSEA_reactome_all.csv'))
+#' 
+#' 
+#' z <- full.data %>% 
+#'   filter(label %in% c('STM','ST'))
+#' 
+#' 
+#' # Get samples for heatmap - top 50 pathways by average significance
+#' n <- 20
+#' 
+#' x <- group_by(z, Description) %>% 
+#'   summarise(avg.adjp = mean(p.adjust)) %>% 
+#'   #arrange(-avg.NES) %>% 
+#'   arrange(avg.adjp) %>% 
+#'   head(., 20)
+#' 
+#' 
+#' # Set sample order for heatmap
+#' full.data$label <- factor(full.data$label, 
+#'                           levels = c('SE','ST','STM','SPI1','SPI2'))
+#' 
+#' 
+#' data2 <- filter(z, Description %in% x$Description)
+#' 
+#' # Remove long description from one that uses "or"
+#'  data2$Description <- gsub(pattern = ' or .*','',data2$Description) %>% 
+#'    gsub(pattern = 'Interleukin', replacement = 'IL')
+#' 
+#' 
+#' # Set order for heatmap - pathways by descending average NES
+#' NES.avg <- group_by(data2, Description) %>% 
+#'   summarise(NES_avg = mean(NES)) %>% 
+#'   arrange(NES_avg)
+#' 
+#' data2$Description <- factor(data2$Description, levels = NES.avg$Description)
+#' 
+#' 
+#' 
+#' # Round NES (remove decimals for ggplotly tooltip)
+#' data2$NES <- round(data2$NES, 2)
+#' 
+#' # Set up palette of colors for heatmap
+#' hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
+#' 
+#' #+ figure, fig.height = 8.5, fig.width = 7
+#' # Heatmap
+#' 
+#' react_heatmap <- function(input){
+#'   ggplot(input, aes(label, Description)) + 
+#'     geom_tile(aes(fill = NES), colour = "white") + 
+#'     scale_fill_gradientn(colors = hm.palette(100))+ 
+#'     theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
+#'           strip.text.x = element_text(size = 12, face = 'bold'),
+#'           strip.text.y = element_text(size = 12, face = 'bold'),
+#'           axis.title = element_text(size = 14, face = "bold"), 
+#'           axis.text = element_text(size = 10),
+#'           legend.text = element_text(size = 12),
+#'           legend.title = element_text(size = 12, face = 'bold'))+
+#'     ggtitle('REACTOME gene set enrichment')+
+#'     labs(x='', y = 'Pathway',
+#'          subtitle = paste('Top',n, 'pathways by avg. adjusted p'))+
+#'     facet_grid(cols = vars(time), scales = 'free')
+#' }
+#' 
+#' p <- react_heatmap(data2)
+#' p
+#' 
+#' 
+#' #' ## Save png of plot
+#' #+ save, eval=F
+#' png(filename = here("/img/GSEA_reactome_heatmap_AL.png"),
+#'     width =7, height = 8.5, units = 'in', res = 500)
+#' p
+#' dev.off()
+#' 
