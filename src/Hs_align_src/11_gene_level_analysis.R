@@ -213,6 +213,7 @@ saveRDS(ser_plot,
 
 
 
+
 # Barplots of top gene changes
 
 # set up 
@@ -280,24 +281,25 @@ save_barplot <- function(p, w, h, file_label){
 }
 
 
-
+# Set top n number of genes to have in barplot
+n <- 15
 
 # SE barplots 
 lim <- 30
-gene_barplot(ser_data1, samp = 'SE', t = '2h', n = 20, lim = lim,  # -12, 5
+gene_barplot(ser_data1, samp = 'SE', t = '2h', n = n, lim = lim,  # -12, 5
                    remove = c('CTB-63M22.1')) %>% 
   save_barplot(., w = 5, h = 4, file_label = 'SE_2h')
 
-gene_barplot(ser_data1, samp = 'SE', t = '8h', n = 20, lim = lim) %>%  #-25, 5
+gene_barplot(ser_data1, samp = 'SE', t = '8h', n = n, lim = lim) %>%  #-25, 5
   save_barplot(., w = 5, h = 4, file_label = 'SE_8h')
 
 
 # ST barplots
-gene_barplot(ser_data1, 'ST', '2h', 20, lim = lim,
+gene_barplot(ser_data1, 'ST', '2h', n, lim = lim,
                    remove = c('TFAP2B')) %>%  #-25, 30
   save_barplot(., w = 5, h = 4, file_label = 'ST_2h')
 
-gene_barplot(ser_data1, 'ST', '8h', 20, lim = lim) %>%  #-6, 8
+gene_barplot(ser_data1, 'ST', '8h', n, lim = 8) %>%  #-6, 8
   save_barplot(., w = 5, h = 4, file_label = 'ST_8h')
 
 
@@ -305,21 +307,21 @@ gene_barplot(ser_data1, 'ST', '8h', 20, lim = lim) %>%  #-6, 8
 
 # SPI1 barplots
 lim <- 12
-gene_barplot(mut_data1, 'SPI1', '2h', 20, lim = lim) %>%  #-10, 5
+gene_barplot(mut_data1, 'SPI1', '2h', n, lim = lim) %>%  #-10, 5
   save_barplot(., w = 5, h = 4, file_label = 'SPI1_2h')
 
-gene_barplot(mut_data1, 'SPI1', '8h', 20, lim = lim, 
+gene_barplot(mut_data1, 'SPI1', '8h', n, lim = lim, 
              remove = c('RPL3P4')) %>% # -3, 7
   save_barplot(., w = 5, h = 4, file_label = 'SPI1_8h')
 
 
 
 # SPI2 barplots
-gene_barplot(mut_data1, 'SPI2', '2h', 20, lim = lim,
+gene_barplot(mut_data1, 'SPI2', '2h', n, lim = lim,
              remove = c('CTB-63M22.1')) %>%  # -6, 4
   save_barplot(., w = 5, h = 4, file_label = 'SPI2_2h')
 
-gene_barplot(mut_data1, 'SPI2', '8h', 20, lim = lim) %>%  # -3, 7.5
+gene_barplot(mut_data1, 'SPI2', '8h', n, lim = lim) %>%  # -3, 7.5
   save_barplot(., w = 5, h = 4, file_label = 'SPI2_8h')
 
 

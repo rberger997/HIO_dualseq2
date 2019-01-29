@@ -310,7 +310,7 @@ p8a <- path_heatmap(mut_paths8)
 # Pathways down in SPI-2 and up in STM
 c <- filter(mut8h, STM_8h > 0 & SPI1_8h < 0) %>% 
   filter(!Description == 'Response to metal ions')
-path_heatmap(c)
+p8c <- path_heatmap(c)
 
 
 # Pathways down in SPI-2 and up in STM
@@ -324,43 +324,37 @@ p8b <- path_heatmap(d)
 d <- filter(mut8h, STM_8h < 0 & SPI2_8h > 0 & SPI1_8h < 0) %>% 
   filter(!Description %in% c('mRNA Splicing - Major Pathway',
                              'Cleavage of Growing Transcript in the Termination Region '))
-p8c <- path_heatmap(d)
+p8d <- path_heatmap(d)
+
+
 
 
 
 # Save PNG files of each 2h heatmap subset
-png(filename = here('img/stm_mutants/mut_2h_gsea_diff_heatmap_subset1.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p2a
-dev.off()
+plots <- list(p2a, p2b, p2c)
+length(plots)
+
+for(i in 1:length(plots)){
+  png(filename = here(paste0('img/stm_mutants/mut_2h_gsea_diff_heatmap_subset',i,'.png')),
+      width = 12, height = 4, units = 'in', res = 300)
+  print(plots[i])
+  dev.off()
+  
+  print(paste(i, 'of',length(plots), 'done'))
+}
 
 
-png(filename = here('img/stm_mutants/mut_2h_gsea_diff_heatmap_subset2.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p2b
-dev.off()
-
-png(filename = here('img/stm_mutants/mut_2h_gsea_diff_heatmap_subset3.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p2c
-dev.off()
 
 
 
 # Save PNG files of each 8h heatmap subset
-png(filename = here('img/stm_mutants/mut_8h_gsea_diff_heatmap_subset1.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p8a
-dev.off()
+plots <- list(p8a, p8b, p8c, p8d)
 
-
-png(filename = here('img/stm_mutants/mut_8h_gsea_diff_heatmap_subset2.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p8b
-dev.off()
-
-
-png(filename = here('img/stm_mutants/mut_8h_gsea_diff_heatmap_subset3.png'),
-    width = 12, height = 4, units = 'in', res = 300)
-p8c
-dev.off()
+for(i in 1:length(plots)){
+  png(filename = here(paste0('img/stm_mutants/mut_8h_gsea_diff_heatmap_subset',i,'.png')),
+      width = 12, height = 4, units = 'in', res = 300)
+  print(plots[i])
+  dev.off()
+  
+  print(paste(i, 'of',length(plots), 'done'))
+}
