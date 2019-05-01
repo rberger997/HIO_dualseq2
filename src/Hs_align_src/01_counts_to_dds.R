@@ -228,6 +228,17 @@ dds_mut <- make_dds(mut_key, 'stm_muts')
 dds_ser <- make_dds(ser_key, 'serovars')
 
 
+################################# Test splitting 2h and 8h for PCA plots
+# Create subsets for 2h and 8h samples, save dds object
+
+# Make separate sample_keys for each subset 
+x2h_key <- dplyr::filter(sample_key, hr == 2)
+x8h_key <- dplyr::filter(sample_key, hr == 8)
+
+# Make dds objects for subsets
+dds_2h <- make_dds(x2h_key, '2h_samples')
+dds_8h <- make_dds(x8h_key, '8h_samples')
+
 #+ render, include=F
 # Render source file to html 
 # dir.create(here('results/DESeq2_human/src_html_output'))

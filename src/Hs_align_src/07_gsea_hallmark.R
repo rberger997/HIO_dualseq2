@@ -144,7 +144,7 @@ full.data <- read.csv(here('results/DESeq2_human/GSEA/hallmark/GSEA_hallmark_all
 ## Add categories for HALLMARK pathways
 # Load hallmark annotation categories
 cats <- read_csv(here('data/hallmark_geneset_categories.csv')) %>% 
-  select(Hallmark_name, Process_category) %>% 
+  dplyr::select(Hallmark_name, Process_category) %>% 
   rename(pathway = Hallmark_name)
 
 cats$Process_category <- gsub('DNA damage', 'Cellular stress', 
@@ -199,12 +199,16 @@ full.data$NES <- round(full.data$NES, 2)
 # Set up palette of colors for heatmap
 hm.palette <- colorRampPalette(rev(brewer.pal(11, 'RdYlBu')), space='Lab')
 
+# Get gene labels for interactive plot tooltip
+full.data$core_enrichment <- gsub('\\/', ', ', full.data$core_enrichment)
+full.data$top10genes <- sub(sprintf('^((?:[^,]*,){10}).*'), '\\1',
+                            full.data$core_enrichment)
 
 
 #+ figure, fig.height = 8.5, fig.width = 7
 # Heatmap
 hallmark_plot <- function(input){
-  ggplot(input, aes(label, pathway)) + 
+  ggplot(input, aes(label, pathway, text = top10genes)) + 
   geom_tile(aes(fill = NES), colour = "white") + 
   scale_fill_gradientn(colors = hm.palette(100))+ 
   theme(axis.text.x = element_text(vjust = 1, hjust = 1, angle = 45),
@@ -247,7 +251,7 @@ dev.off()
 #' ## STM mutants GSEA hallmark
 
 # Select samples for heatmap
-muts <- filter(full.data, label %in% c('STM', 'SPI1', 'SPI2'))
+muts <- dplyr::filter(full.data, label %in% c('STM', 'SPI1', 'SPI2'))
 
 #+ fig.height = 8.5, fig.width = 7
 # Heatmap
@@ -255,14 +259,24 @@ p1 <- hallmark_plot(muts)
 p1
 
 
+#' ## STM mutants interactive heatmap
+#+ fig.height = 10, fig.width = 7
+ggplotly(p1)
+
+
 #' ## Serovars GSEA hallmark
 
 #+ fig.height = 8.5, fig.width = 7
 # Select samples
-ser <- filter(full.data, label %in% c('STM','SE','ST'))
+ser <- dplyr::filter(full.data, label %in% c('STM','SE','ST'))
 
 p2 <- hallmark_plot(ser)
 p2
+
+
+#' ## Serovars interactive heatmap
+#+ fig.height = 10, fig.width = 7
+ggplotly(p2)
 
 
 #' ## Save png of plots
